@@ -69,6 +69,7 @@ def retrieveEmails(service):
         if unsubscribeLink is not None:
             unsubscribeEmails[sender] = unsubscribeLink
         else:
+            print(sender + "doesn't have link")
             pass
 
 

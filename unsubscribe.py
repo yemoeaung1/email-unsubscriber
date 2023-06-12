@@ -18,13 +18,13 @@ import time
 
 def unsubscribe(unsubscribeURL):
     # create webdriver object
-    driver = webdriver.Firefox()
+    driver = webdriver.Edge()
 
     """if it isn't a simple checkbox, we can just open the window for them"""
     driver.get(unsubscribeURL)
     try:
         checkbox = driver.find_element(By.ID, "_objUnsubAllChk")
-        update_button = driver.find_element(By.NAME, "_ctl44")
+        update_button = driver.find_element(By.CLASS_NAME, "buttontext")
 
         # if we already checked it before, we pass it
         if not checkbox.is_selected():
@@ -34,7 +34,9 @@ def unsubscribe(unsubscribeURL):
     # if checkbox isn't found, we leave the window open
     except selenium.common.exceptions.NoSuchElementException:
         print("No checkbox was found")
-        time.sleep(30)
-        driver.close()
-    # else:
-    #     while driver.current_window_handle in driver.window_handles
+        try:
+            while driver.current_window_handle in driver.window_handles:
+                time.sleep(1)
+        # if user closes the window, we move on
+        except selenium.common.exceptions.NoSuchWindowException:
+            pass
