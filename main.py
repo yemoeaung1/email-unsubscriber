@@ -9,7 +9,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 import re
-import parsing_email
+import unsubscribe
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
@@ -53,7 +53,7 @@ def getSenderAddress(email_headers):
 
 
 def retrieveEmails(service):
-    results = service.users().messages().list(userId='me', labelIds=['CATEGORY_PROMOTIONS'], maxResults=10).execute()
+    results = service.users().messages().list(userId='me', labelIds=['CATEGORY_PROMOTIONS'], maxResults=20).execute()
     messages = results.get('messages', [])
 
     if not messages:
@@ -65,7 +65,11 @@ def retrieveEmails(service):
         email_headers = message['payload']['headers']
         sender = getSenderAddress(email_headers)
         unsubscribeLink = getUnsubscribeLink(email_headers)
-        unsubscribeEmails[sender] = unsubscribeLink
+        print(sender)
+        if unsubscribeLink is not None:
+            unsubscribeEmails[sender] = unsubscribeLink
+        else:
+            pass
 
 
 """authorizing the user"""
@@ -101,7 +105,7 @@ def main():
         for k, v in unsubscribeEmails.items():
             print(k, v)
             if unsubscribeEmails.get(k) is not None:
-                parsing_email.unsubscribe(unsubscribeEmails.get(k))
+                unsubscribe.unsubscribe(unsubscribeEmails.get(k))
 
     except HttpError as error:
         # TODO(developer) - Handle errors from gmail API.
