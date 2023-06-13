@@ -1,5 +1,3 @@
-import requests
-from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
@@ -30,6 +28,7 @@ def unsubscribe(unsubscribeURL):
         if not checkbox.is_selected():
             checkbox.click()
             update_button.click()
+        time.sleep(5)
         driver.close()
     # if checkbox isn't found, we leave the window open
     except selenium.common.exceptions.NoSuchElementException:
@@ -40,3 +39,4 @@ def unsubscribe(unsubscribeURL):
         # if user closes the window, we move on
         except selenium.common.exceptions.NoSuchWindowException:
             pass
+    return 0

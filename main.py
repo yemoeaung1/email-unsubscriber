@@ -12,7 +12,7 @@ import re
 import unsubscribe
 
 # If modifying these scopes, delete the file token.json.
-SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
+SCOPES = ['https://www.googleapis.com/auth/gmail.readonly', 'https://www.googleapis.com/auth/gmail.modify']
 """
 Lists the user's Gmail labels.
     """
@@ -48,7 +48,7 @@ def getSenderAddress(email_headers):
         if type_ == 'From':
             sender = header['value']
             if sender is not None:
-                print("got address")
+                # print("got address")
                 return sender
 
 
@@ -64,14 +64,21 @@ def retrieveEmails(service):
         message = service.users().messages().get(userId='me', id=message['id']).execute()
         email_headers = message['payload']['headers']
         sender = getSenderAddress(email_headers)
-        unsubscribeLink = getUnsubscribeLink(email_headers)
-        print(sender)
-        if unsubscribeLink is not None:
-            unsubscribeEmails[sender] = unsubscribeLink
-        else:
-            print(sender + "doesn't have link")
-            pass
 
+        if sender not in unsubscribeEmails:
+            unsubscribeLink = getUnsubscribeLink(email_headers)
+            if unsubscribeLink is None:
+                print(sender + " doesn't have easily findable link")
+                msg_to_be_deleted = service.users().messages().trash(userId='me', id=message['id']).execute()
+                continue
+
+            # unsubbing process
+            unsubscribe.unsubscribe(unsubscribeLink)
+
+            # add to a dictionary so, we don't repeat work
+            unsubscribeEmails[sender] = unsubscribeLink
+
+        msg_to_be_deleted = service.users().messages().trash(userId = 'me', id = message['id']).execute()
 
 """authorizing the user"""
 
@@ -101,12 +108,15 @@ def main():
     try:
         # Call the Gmail API
         service = build('gmail', 'v1', credentials=authorize())
-        # listLabels(service=service)
+
         retrieveEmails(service=service)
         for k, v in unsubscribeEmails.items():
             print(k, v)
-            if unsubscribeEmails.get(k) is not None:
-                unsubscribe.unsubscribe(unsubscribeEmails.get(k))
+            # if unsubscribeEmails.get(k) is None:
+            #     continue
+            # if unsubscribe.unsubscribe(unsubscribeEmails.get(k)) == 0:
+            #     return 0
+                # function to move email to trash
 
     except HttpError as error:
         # TODO(developer) - Handle errors from gmail API.
